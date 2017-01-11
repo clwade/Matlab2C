@@ -1,0 +1,59 @@
+<Machine>::="MACHINE" <Id> <Includes>* <Attributes> <Operations> "END"
+<Includes>::=("INCLUDE" (<StringLit> | \<<Id>".bs"\>) ";")*
+<Attributes>::=("ATTRIBUTES" <Defines> <CVDefine>)?
+<Defines>::=("#define" <Id> <Ele>)*
+<CVDefine>::=((<VarDefine> | <CstDefine>)? ";")*
+<VarDefine>::=(<Type>(<PointIdD> ("=" <Ele>)?)("," (<PointIdD> ("=" <Ele>)?))*)
+			  | ("typedef" <EnumType> <Id>)
+			  | ("typedef" <Type> <PointIdD>)
+			  |	("typedef" <TupleType> <PointIdD>)
+<CstDefine>::="const" <Type> (<PointIdD> "=" <Ele>) ("," ( <PointIdD> "=" <Ele>))*
+<Type>::=<NomalType> | <SetType> |	<Id> ("<" <Type> ">")?
+<PointIdD>::=("*" <PointIdD>) | <Id> |	("(" <PointIdD> ")")
+<EnumType>::="enum" "{" ((<Id> ("=" <UnaryE>)?) ("," <Id> ("=" <UnaryE>)?))* "}"
+<TupleType>::="struct" "{" ((<Type> <PointIdD> ";"))* "}"
+<Operations>::=	("OPERATIONS" (<FunctionDefine>)+)?
+<FunctionDefine>::=<Type> <PointIdD> "(" <ParaDefineList> ")" ("{" <ComStatement> "}")
+<ParaDefineList>::=(<Type> <PointIdD> ("," <Type> <PointIdD>)*)?
+<ComStatement>::=(<CVDefine>)? (<Invariant>)? (<Statement>)*
+<Invariant>::="INVARIANT" <ProE> ";"
+<Statement>::=";" |	<ElementTakeS> ";" | <FunctionCall> ";" | <AssignmentS> ";"
+			| <ReturnS> ";" | <WhileS> | <IfS> | "{" (<Statement>)* "}") | <AtLit>
+<ElementTakeS>::=<Id> ("." (<Id>))* (("." "<" (((<Id> | <UIntLit>) ":" <Ele>)) ("," ((<Id> | <UIntLit>) ":" <Ele>))* ">"))? ":" <MSE>
+<FunctionCall>::=<Id> "(" <ParaValueList> ")" (<AppendParas>)?
+<AssignmentS>::=(<PointIdE> "=" <Ele>) | (<PointIdE> ("." <Id> | "->" <Id>)+ "=" <Ele>)
+<ReturnS>::="return" (<Ele>)?
+<WhileS>::="while" "(" <ProE> ")" <Statement>
+<IfS>::="if" "(" <ProE> ")" <Statement> (("else" <Statement>))?
+<ParaValueList>::=(<Ele> ("," <Ele>)*)?
+<AppendParas>::="@" <Id> ("," <Id>)* "@"
+<PointIdE>::=("*" <PointIdE>) | <Id>
+<NomalType>::="long" "long" | "int" | "short" | "float" | "char" | "long" | "double" | "string" | "proposition" | "void" | "unsigned" "int" | "unsigned" "short" | "unsigned" "float" | "unsigned" "char" | "unsigned" "double" | "unsigned" "long" "long" | "unsigned" "long" 
+<SetType>::="set" "<" <Type> ">" (<AtLit>)?
+<Ele>::=<OrProE> ("=>" <OrProE>)*
+<OrProE>::=<AndProE> ("||" <AndProE>)*
+<AndProE>::=<ProTermE> ("&&" <ProTermE>)*
+<ProTermE>::=<QuanE> | <ConditionTermE>
+<QuanE>::=("!" <IdList> "(" <ProE> ")") | ("#" <IdList> "(" <ImpProE> ")")
+<IdList>::=(<Id> ("," <Id> )* | "(" <Id> ("," <Id> )* ")")
+<ProE>::=<OrProE> ("=>" <OrProE>)*
+<ImpProE>::=(<OrProE> "=>" <OrProE>)
+<ConditionTermE>::=<MSE> ( ( ">" <MSE> | "!:" (<MSE> | <Type>) | "<=" <MSE> | "<" <MSE> | ">=" <MSE> | ":" (<MSE> | <Type>) | "==" <MSE> | "!=" <MSE>))?
+<MSE>::=<MSE1> ("+" <MSE1> | "-" <MSE1> | "--" <MSE1>)*
+<MSE1>::=<UnaryE> ("*" <UnaryE> | "/" <UnaryE> | "%" <UnaryE> | "/-\\" <UnaryE> | "\\-/" <UnaryE>)*
+<UnaryE>::=(("+" | "-") <Term>) | <OneE>
+<OneE>::=("~" <OneE>) | ("*" <OneE>) |	("&" <OneE>) | <Term>
+<Term>::= ("nil" | <StringLit> | "true" | "false" | <UIntLit> | <UFloatLit> | <CharLit> | ("{" (<Ele> ("," <Ele>)*)? "}") | (("<" (<Ele> ("," <Ele>)*)? ">") | <FunctionCall> | <Id> | ("(" <Ele> ")")) (("." "<" (((<Id> | <UIntLit>) ":" <Ele>)) ("," ((<Id> | <UIntLit>) ":" <Ele>))* ">") | ("." <Id>) 
+| ("->" <Id>))*) (<AtLit>)?
+<UIntLit>::=(<NZDIGIT> (<DIGIT>)*) | <ZDIGIT>
+<UFloatLit>::=<UIntLit> "." (<DIGIT>)*
+<AtLit>::="@" (~["\"","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""])* "@"
+<CharLit>::="\'" (~["\'","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""]) "\'"
+<StringLit>::="\"" (~["\"","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""])* "\""
+<Id>::=<ALPHABET> <LETTER> | <ALPHABET>
+<ALPHABET>::= "a" | "b" | "c" | ...... | "z" | "A" | "B" | "C" | ...... | "Z" | "_"
+<LETTER> ::= <ALPHABET> <LETTER> | <ALPHABET> | <DIGIT> <LETTER> | <DIGIT>
+<DIGIT> ::= <ZDIGIT> | <NZDIGIT>
+<ZDIGIT> ::= "0"
+<NZDIGIT> ::= "1" | "2" | ...... | "9"
+

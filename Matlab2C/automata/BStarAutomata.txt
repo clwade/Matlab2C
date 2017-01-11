@@ -1,0 +1,517 @@
+//前三个字母为大写小写小写
+check
+<Machine>::="MACHINE" <Id> <Includes> <Attributes> <Operations> "END"
+δ(Mac, "MACHINE", @)=(Mac1, @)
+δ(Mac1, ε, @)=([Id, Mac2], @)
+δ(Mac2, ε, @)=([Inc, Mac3], @)
+δ(Mac3, ε, @)=([Att, Mac4], @)
+δ(Mac4, ε, @)=([Ope, Mac5], @)
+δ(Mac5, "END", @)=(FIN, @)
+
+check
+<Includes>::=("INCLUDE" (<StringLit> | \<<Id>".bs"\>) ";")* 
+δ(Inc, "INCLUDE", @)=(Inc1, @)
+δ(Inc, ε, @)=(RET, @)
+δ(Inc1, ε, @)=([StrL, Inc5], @)
+δ(Inc1, "<", @)=(Inc2, "<")
+δ(Inc2, ε, "<")=([Id, Inc3], "<")
+δ(Inc3, ".bs", "<")=(Inc4, "<")
+δ(Inc4, ">", "<")=(Inc5, @)
+δ(Inc5, ";", @)=(Inc, @)
+
+check
+<Attributes>::=("ATTRIBUTES" <Defines> <CVDefine>)?
+δ(Att, "ATTRIBUTES", @)=(Att1, @)
+δ(Att, ε, @)=(RET, @)
+δ(Att1, ε, @)=([Def, Att2], @)
+δ(Att2, ε, @)=([Cvd, RET], @)
+
+check
+<Defines>::=("#define" <Id> <Ele>)*
+δ(Def, "#define", @)=(Def1, @)
+δ(Def, ε, @)=(RET, @)
+δ(Def1, ε, @)=([Id, Def2], @)
+δ(Def2, ε, @)=([Ele, Def], @)
+
+check
+<CVDefine>::=((<VarDefine> | <CstDefine> | <FunctionDefineHead>) ";")*
+δ(Cvd, ε, @)=([VarD, Cvd1], @) //当对了会跳转，不对执行下一条
+δ(Cvd, ε, @)=([CstD, Cvd1], @)
+δ(Cvd, ε, @)=([FunDH, Cvd1], @)
+δ(Cvd, ε, @)=(RET, @)
+δ(Cvd1, ";", @)=(Cvd2, @)
+δ(Cvd2, ε, @)=([VarD, Cvd1], @)
+δ(Cvd2, ε, @)=([CstD, Cvd1], @)
+δ(Cvd2, ε, @)=(RET, @)
+
+check
+<VarDefine>::=(<Type>(<PointId> ("=" <Ele>)?)("," (<PointId> ("=" <Ele>)?))*)
+			  | ("typedef" <EnumType> <Id>)
+			  | ("typedef" <Type> <PointId>)
+			  |	("typedef" <TupleType> <Id>)
+			  |（"typedef" "struct" <Id> <PointId>）
+
+δ(VarD, "typedef", @)=(VarD1, @)
+δ(VarD, ε, @)=([Typ, VarD2], @)
+δ(VarD1, ε, @)=([EnuT, VarD3], @)
+δ(VarD1, ε, @)=([Typ, VarD4], @)
+δ(VarD1, ε, @)=([TupT, VarD5], @)
+δ(VarD1, "struct", @)=(VarD9, @)
+δ(VarD2, ε, @)=([PoiI, VarD6], @)
+δ(VarD3, ε, @)=([Id, RET], @)
+δ(VarD4, ε, @)=([PoiI, RET], @)
+δ(VarD5, ε, @)=([Id, RET], @)
+δ(VarD6, "=", @)=(VarD7, @)
+δ(VarD6, ",", @)=(VarD2, @)
+δ(VarD6, ε, @)=(RET, @)
+δ(VarD7, ε, @)=([Ele, VarD8], @)
+δ(VarD8, ",", @)=(VarD2, @)
+δ(VarD8, ε, @)=(RET, @)
+δ(VarD9, ε, @)=([Id, VarD10], @)
+δ(VarD10, ε, @)=([PoiI, RET], @)
+
+check
+<CstDefine>::="const" <Type> (<PointId> "=" <Ele>) ("," ( <PointId> "=" <Ele>))*
+δ(CstD, "const", @)=(CstD1, @)
+δ(CstD1, ε, @)=([Typ, CstD2], @)
+δ(CstD2, ε, @)=([PoiI, CstD3], @)
+δ(CstD3, "=", @)=(CstD4, @)
+δ(CstD4, ε, @)=([Ele, CstD5], @)
+δ(CstD5, ",", @)=(CstD6, @)
+δ(CstD5, ε, @)=(RET, @)
+δ(CstD6, ε, @)=([PoiI, CstD7], @)
+δ(CstD7, "=", @)=(CstD8, @)\
+δ(CstD8, ε, @)=([Ele, CstD9], @)
+δ(CstD9, ",", @)=(CstD6, @)
+
+<FunctionDefineHead>::=<Type> <PointId> "(" <ParaDefineList> ")"
+δ(FunDH, ε, @)=([Typ, FunDH1], @)
+δ(FunDH1, ε, @)=([PoiI, FunDH2], @)
+δ(FunDH2, "(", @)=(FunDH3, "(")
+δ(FunDH3, ε, "(")=([ParDL, FunDH4], "(")
+δ(FunDH4, ")", "(")=(RET, @)
+
+check
+<Type>::=<NormalType> | <SetType> | <Id>
+δ(Typ, ε, @)=([NorT, RET], @)
+δ(Typ, ε, @)=([SetT, RET], @)
+δ(Typ, ε, @)=([Id, RET], @)
+
+check
+<PointId>::=("*" <PointId>) | <Id> | ("(" <PointId> ")")
+δ(PoiI, "*", @)=(PoiI1, @)
+δ(PoiI, ε, @)=([Id, RET], @)
+δ(PoiI1, "(", @)=(PoiI2, "(")
+δ(PoiI1, ε, @)=([PoiI, RET], @)
+δ(PoiI2, ε, "(")=([PoiI, PoiI3], "(")
+δ(PoiI3, ")", "(")=(RET, @)
+
+check
+<EnumType>::="enum" "{" ((<Id> ("=" <UnaryE>)?) ("," <Id> ("=" <UnaryE>)?)*)? "}"
+δ(EnuT, "enum", @)=(EnuT1, @)
+δ(EnuT1, "{", @)=(EnuT2, "{")
+δ(EnuT2, ε, "{")=([Id, EnuT3], "{")[p[]]
+δ(EnuT2, “}”, "{")=(RET, @)
+δ(EnuT3, "=", "{")=(EnuT4, "{")
+δ(EnuT3, ",", "{")=(EnuT5, "{")
+δ(EnuT3, "}", "{")=(RET, @)
+δ(EnuT4, ε, "{")=([UnaE, EnuT6], "{")
+δ(EnuT5, ε, "{")=([Id, EnuT3], "{")
+δ(EnuT6, ",", "{")=(EnuT5, "{")
+δ(EnuT6, "}", "{")=(RET, @)
+
+check
+<TupleType>::="struct" "{" ((<Type> <PointId> ";"))* "}"
+δ(TupT, "struct", @)=(TupT1, @)
+δ(TupT1, "{", @)=(TupT2, "{")
+δ(TupT2, ε, "{")=([Typ, TupT3], "{")
+δ(TupT2, "}", "{")=(RET, @)
+δ(TupT3, ε, "{")=([PoiI, TupT4], "{")
+δ(TupT4, ";", "{")=(TupT2, "{")
+
+check
+<Operations>::= ("OPERATIONS" (<FunctionDefine>)+)?
+δ(Ope, "OPERATIONS", @)=(Ope1, @)
+δ(Ope, ε, @)=(RET, @)
+δ(Ope1, ε, @)=([FunD, Ope2], @)
+δ(Ope2, ε, @)=([FunD, Ope2], @)
+δ(Ope2, ε, @)=(RET, @)
+
+check
+<FunctionDefine>::=<Type> <PointId> "(" <ParaDefineList> ")" ("{" <ComStatement> "}")
+δ(FunD, ε, @)=([Typ, FunD1], @)
+δ(FunD1, ε, @)=([PoiI, FunD2], @)
+δ(FunD2, "(", @)=(FunD3, "(")
+δ(FunD3, ε, "(")=([ParDL, FunD4], "(")
+δ(FunD4, ")", "(")=(FunD5, @)
+δ(FunD5, "{", @)=(FunD6, "{")
+δ(FunD6, ε, "{")=([ComS, FunD7], "{")
+δ(FunD7, "}", "{")=(RET, @)
+
+check
+<ParaDefineList>::=(<Type> <PointId> ("," <Type> <PointId>)*)?
+δ(ParDL, ε, @)=([Typ, ParDL1], @)
+δ(ParDL, ε, @)=(RET, @)
+δ(ParDL1, ε, @)=([PoiI, ParDL2], @)
+δ(ParDL2, ",", @)=([Typ, ParDL1], @)
+δ(ParDL2, ε, @)=(RET, @)
+
+check
+<ComStatement>::=(<CVDefine>)? (<Statement>)*
+δ(ComS, ε, @)=([Cvd, ComS1], @)
+δ(ComS, ε, @)=([Sta, ComS2], @)
+δ(ComS, ε, @)=(RET, @)
+δ(ComS1, ε, @)=([Sta, ComS2], @)
+δ(ComS1, ε, @)=(RET, @
+δ(ComS2, ε, @)=([Sta, ComS2], @)
+δ(ComS2, ε, @)=(RET, @)
+
+check
+<Statement>::=";" |	<ElementTakeS> ";" | <FunctionCall> ";" | <AssignmentS> ";"
+			| <ReturnS> ";" | <WhileS> | <IfS> | "{" (<Statement>)* "}") | <AtLit>
+δ(Sta, ";", @)=(RET, @)
+δ(Sta, ε, @)=([EleTS, Sta1], @)
+δ(Sta, ε, @)=([FunC, Sta2], @)
+δ(Sta, ε, @)=([AssS, Sta3], @)
+δ(Sta, ε, @)=([RetS, Sta4], @)
+δ(Sta, ε, @)=([WhiS, RET], @)
+δ(Sta, ε, @)=([Ifs, RET], @)
+δ(Sta, "{", @)=(Sta5, "{")
+δ(Sta, ε, @)=([Atl, RET], @)
+δ(Sta1, ";", @)=(RET, @) 
+δ(Sta2, ";", @)=(RET, @)
+δ(Sta3, ";", @)=(RET, @)
+δ(Sta4, ";", @)=(RET, @)
+δ(Sta5, ε, "{")=([Sta, Sta6], @)
+δ(Sta5, "}", "{")=(RET, @)
+δ(Sta6, "}", "{")=(RET, @)
+δ(Sta6, ε, @)=([Sta, Sta6], @)
+
+check
+<ElementTakeS>::=<Id> (("." "<" (((<Id>) ":" <Ele>)) ("," ((<Id>) ":" <Ele>))* ">"))? ":" <MSE>
+δ(EleTS, ε, @)=([Id, EleTS1], @)
+δ(EleTS1, ".", @)=(EleTS2, @)
+δ(EleTS1, ":", @)=(EleTS8, @)   
+δ(EleTS2, "<", @)=(EleTS3, "<")
+δ(EleTS3, ε, "<")=([Id, EleTS4], "<")
+δ(EleTS4, ":", "<")=(EleTS5, "<")
+δ(EleTS5, ε, "<")=([Ele, EleTS6], "<")
+δ(EleTS6, ",", "<")=(EleTS3, "<")
+δ(EleTS6, ">", "<")=(EleTS7, @)
+δ(EleTS7, ":", @)=(EleTS8, @)
+δ(EleTS8, ε, @)=([Mse, RET], @)
+
+check
+<FunctionCall>::=<Id> "(" <ParaValueList> ")" (<AppendParas>)?
+δ(FunC, ε, @)=([Id, FunC1], @)
+δ(FunC1, "(", @)=(FunC2, "(")
+δ(FunC2, ε, "(")=([ParVL, FunC3], "(")
+δ(FunC3, ")", "(")=(FunC4, @)
+δ(FunC4, ε, @)=([AppP, RET], @)
+δ(FunC4, ε, @)=(RET, @)
+
+check
+<AssignmentS>::=<PointId> ("." <Id> | "->" <Id>)* "=" <Ele>
+δ(AssS, ε, @)=([PoiI, AssS1], @)
+δ(AssS1, "=", @)=(AssS2, @)
+δ(AssS1, ".", @)=(AssS3, @)
+δ(AssS1, "->", @)=(AssS3, @)
+δ(AssS2, ε, @)=([Ele, RET], @)
+δ(AssS3, ε, @)=([Id, AssS1], @)
+  
+check
+<ReturnS>::="return" (<Ele>)?
+δ(RetS, "return", @)=(RetS1, @)
+δ(RetS1, ε, @)=([Ele, RET], @)
+δ(RetS1, ε, @)=(RET, @)
+
+check
+<WhileS>::="while" "(" <Ele> ")" <Statement>
+δ(WhiS, "while", @)=(WhiS1, @)
+δ(WhiS1, "(", @)=(WhiS2, "(")
+δ(WhiS2, ε, "(")=([Ele, WhiS3], "(")
+δ(WhiS3, ")", "(")=(WhiS4, @)
+δ(WhiS4, ε, @)=([Sta, RET], @)
+
+check
+<IfS>::="if" "(" <Ele> ")" <Statement> (("else" <Statement>))?
+δ(Ifs, "if", @)=(Ifs1, @)
+δ(Ifs1, "(", @)=(Ifs2, "(")
+δ(Ifs2, ε, "(")=([Ele, Ifs3], "(")
+δ(Ifs3, ")", "(")=(Ifs4, @)
+δ(Ifs4, ε, @)=([Sta, Ifs5], @)
+δ(Ifs5, "else", @)=(Ifs6, @)
+δ(Ifs5, ε, @)=(RET, @)
+δ(Ifs6, ε, @)=([Sta, RET], @)
+
+check
+<ParaValueList>::=(<Ele> ("," <Ele>)*)?
+δ(ParVL, ε, @)=([Ele, ParVL1], @)
+δ(ParVL, ε, @)=(RET, @)
+δ(ParVL1, ",", @)=(ParVL2, @)
+δ(ParVL1, ε, @)=(RET, @)
+δ(ParVL2, ε, @)=([Ele, ParVL1], @)
+
+
+<AppendParas>::="@" <Id> ("," <Id>)* "@"
+δ(AppP, "@", @)=(AppP1, "@"")
+δ(AppP1, ε, "@")=([Id, AppP2], "@")
+δ(AppP2, ",", "@")=(AppP1, "@")
+δ(AppP2, "@", "@")=(RET, @)
+
+
+<NormalType>::="long" "long" | "int" | "short" | "float" | "char" | "long" | "proposition" | "double" 
+| "string" | "void" | "unsigned" "int" | "unsigned" "short" | "unsigned" "float" 
+| "unsigned" "char" | "unsigned" "double" | "unsigned" "long" "long" | "unsigned" "long" 
+δ(NorT, "long", @)=(NorT1, @)
+δ(NorT, "int", @)=(RET, @)
+δ(NorT, "short", @)=(RET, @)
+δ(NorT, "float", @)=(RET, @)
+δ(NorT, "char", @)=(RET, @)
+δ(NorT, "double", @)=(RET, @)
+δ(NorT, "string", @)=(RET, @)
+δ(NorT, "void", @)=(RET, @)
+δ(NorT, "proposition", @)=(RET, @)
+δ(NorT, "unsigned", @)=(NorT2, @)
+δ(NorT1, "long", @)=(RET, @)
+δ(NorT1, ε, @)=(RET, @)
+δ(NorT2, "int", @)=(RET, @)
+δ(NorT2, "short", @)=(RET, @)
+δ(NorT2, "float", @)=(RET, @)
+δ(NorT2, "char", @)=(RET, @)
+δ(NorT2, "double", @)=(RET, @)
+δ(NorT2, "long", @)=(NorT3, @)
+δ(NorT3, "long", @)=(RET, @)
+δ(NorT3, ε, @)=(RET, @)
+
+check
+<SetType>::="set" "<" <Type> ">" (<AtLit>)
+δ(SetT, "set", @)=(SetT1, @)
+δ(SetT1, "<", @)=(SetT2, "<")
+δ(SetT2, ε, "<")=([Typ, SetT3], "<")
+δ(SetT3, ">", "<")=(SetT4, @)
+δ(SetT4, ε, @)=([Atl, RET], @)
+
+check
+<Ele>::=<AndProE> ("||" <AndProE>)*
+δ(Ele, ε, @)=([AndPE, Ele1], @)
+δ(Ele1, "||", @)=(Ele2, @)
+δ(Ele1, ε, @)=(RET, @)
+δ(Ele2, ε, @)=([AndPE, Ele1], @)
+
+check
+<AndProE>::=<ConditionTermE> ("&&" <ConditionTermE>)*
+δ(AndPE, ε, @)=([ConTE, AndPE1], @)
+δ(AndPE1, "&&", @)=(AndPE2, @)
+δ(AndPE1, ε, @)=(RET, @)
+δ(AndPE2, ε, @)=([ConTE, AndPE1], @)
+
+check
+<ConditionTermE>::= <ElementTakeS> | <MSE> ( ( ">" <MSE> | "<=" <MSE> | "<" <MSE> 
+| ">=" <MSE> | "==" <MSE> | "!=" <MSE> )?
+δ(ConTE, ε, @)=([EleTS, RET], @)					
+δ(ConTE, ε, @)=([Mse, ConTE1], @)
+δ(ConTE1, ">", @)=(ConTE2, @)
+δ(ConTE1, "<", @)=(ConTE2, @)
+δ(ConTE1, ">=", @)=(ConTE2, @)
+δ(ConTE1, "<=", @)=(ConTE2, @)
+δ(ConTE1, "!=", @)=(ConTE2, @)
+δ(ConTE1, "==", @)=(ConTE2, @)
+δ(ConTE1, ε, @)=(RET, @)
+δ(ConTE2, ε, @)=([Mse, RET], @)
+
+check
+<MSE>::=<MSET> ("+" <MSET> | "-" <MSET> | "&" <MSET> | "|" <MSET> | ">>" <MSET> | "<<" <MSET> | "--" <MSET> )*
+δ(Mse, ε, @)=([MseT, Mse1], @)
+δ(Mse1, "+", @)=(Mse2, @)
+δ(Mse1, "-", @)=(Mse2, @)
+δ(Mse1, "&", @)=(Mse2, @)
+δ(Mse1, "|", @)=(Mse2, @)
+δ(Mse1, ">>", @)=(Mse2, @)
+δ(Mse1, "<<", @)=(Mse2, @)
+δ(Mse1, "--", @)=(Mse2, @)
+δ(Mse1, ε, @)=(RET, @)
+δ(Mse2, ε, @)=([MseT, Mse1], @)
+
+check
+<MSET>::=<UnaryE> ("*" <UnaryE> | "/" <UnaryE> | "%" <UnaryE> | "/-\\" <UnaryE> | "\\-/" <UnaryE>)*
+δ(MseT, ε, @)=([UnaE, MseT1], @)
+δ(MseT1, "*", @)=(MseT2, @)
+δ(MseT1, "/", @)=(MseT2, @)
+δ(MseT1, "%", @)=(MseT2, @)
+δ(MseT1, "/-\\", @)=(MseT2, @)
+δ(MseT1, "\\-/", @)=(MseT2, @)
+δ(MseT1, ε, @)=(RET, @)
+δ(MseT2, ε, @)=([UnaE, MseT1], @)
+
+check
+<UnaryE>::=(("+" | "-") <Term>) | <OneE>
+δ(UnaE, "+", @)=(UnaE1, @)
+δ(UnaE, "-", @)=(UnaE1, @)
+δ(UnaE, ε, @)=([OneE, RET], @)
+δ(UnaE1, ε, @)=([Ter, RET], @)
+
+check
+<OneE>::=("~" <OneE>) | ("*" <OneE>) | ("&" <OneE>) | <Term>
+δ(OneE, "~", @)=(OneE1, @)
+δ(OneE, "*", @)=(OneE1, @)
+δ(OneE, "&", @)=(OneE1, @)
+δ(OneE, ε, @)=([Ter, RET], @)
+δ(OneE1, ε, @)=([OneE, RET], @)
+
+
+<Term>::= ("nil" | <StringLit> | <UIntLit> | <UFloatLit> | <CharLit> | <TrueLit> | <FalseLit> 
+| ("{" (<Ele> ("," <Ele>)*)? "}") (AtLit)?
+| "(" <Type> ("*")? ")" <Ele>
+| (("<" (<Ele> ("," <Ele>)*)? ">") | <FunctionCall> | <Id> | ("(" <Ele> ")")) (("." <Id>)| ("->" <Id>))*) | "sizeof""("<Type>")"
+δ(Ter, "nil", @)=(RET, @)
+δ(Ter, ε, @)=([StrL, RET], @)
+δ(Ter, ε, @)=([UinL, RET], @)
+δ(Ter, ε, @)=([UflL, RET], @)
+δ(Ter, ε, @)=([ChaL, RET], @)
+δ(Ter, ε, @)=([TruL, RET], @)
+δ(Ter, ε, @)=([FalL, RET], @)
+δ(Ter, "sizeof", @)=(Ter12, @)
+δ(Ter, "{", @)=(Ter1, "{")
+δ(Ter, "<", @)=(Ter2, "<")
+δ(Ter, ε, @)=([FunC, Ter9], @)
+δ(Ter, ε, @)=([Id, Ter9], @)
+δ(Ter, "(", @)=(Ter3, "(")
+δ(Ter1, ε, "{")=([Ele, Ter4], "{")
+δ(Ter1, "}", "{")=(RET, @)
+δ(Ter2, ε, "<")=([Ele, Ter5],  "<")
+δ(Ter3, ε, "(")=([Typ, Ter15], "(")
+δ(Ter3, ε, "(")=([Ele, Ter6], "(")
+δ(Ter4, "}", "{")=(RET, @)
+δ(Ter4, ",", "{")=(Ter7, "{")
+δ(Ter5, ">", "<")=(Ter9, @)
+δ(Ter5, ",", "<")=(Ter8, "<")
+δ(Ter6, ")", "(")=(Ter9, @)
+δ(Ter7, ε, "{")=([Ele, Ter4], "{")
+δ(Ter8, ε, "<")=([Ele, Ter5], "<")
+δ(Ter9, ".", @)=(Ter10, @)
+δ(Ter9, "->", @)=(Ter10, @)
+δ(Ter9, ε, @)=(RET, @)
+δ(Ter10, ε, @)=([Id, Ter9], @)
+δ(Ter11, ε, @)=([Atl, RET], @)
+δ(Ter11, ε, @)=(RET, @)
+δ(Ter12, "(", @)=(Ter13, @)
+δ(Ter13, ε, "(")=([Typ, Ter14], @)
+δ(Ter14, ")", "(")=(RET, @)
+δ(Ter15, "*", "(")=(Ter16, "(")
+δ(Ter15, ")", "(")=(Ter17, @)
+δ(Ter16, ")", "(")=(Ter17, @)
+δ(Ter17, ε, @)=([Ele, RET], @)
+
+
+<UIntLit>::=(<NZDIGIT> (<DIGIT>)*) | <ZDIGIT> | <HEX>
+δ(UinL, ε, @)=([Nzd, UinL1], @)
+δ(UinL, ε, @)=([Zdi, RET], @)
+δ(UinL1, ε, @)=([Dig, UinL1], @)
+δ(UinL1, ε, @)=(RET, @)
+
+
+<UFloatLit>::=<UIntLit> "." (<DIGIT>)*
+δ(UflL, ε, @)=([UinL, UflL1], @)
+δ(UflL1, ".", @)=(UflL2, @)
+δ(UflL2, ε, @)=([Dig, UflL2], @)
+δ(UflL2, ε, @)=(RET, @)
+
+
+<AtLit>::="@"<Id>"@"
+δ(Atl, "@", @)=(Atl1, @)
+δ(Atl1, ε, @)=([Id, Atl2], @);
+δ(Atl2, "@", @)=(RET, @);
+
+
+//单独处理
+<CharLit>::="\'" (~["\'","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""]) "\'"
+<StringLit>::="\"" (~["\"","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""])* "\""
+
+
+
+
+<Id>::=<ALPHABET> <LETTER> | <ALPHABET>
+δ(Id, ε, @)=([Alp, Id1], @)
+δ(Id1, ε, @)=([Let, RET], @)
+δ(Id1, ε, @)=(RET, @)
+
+<ALPHABET>::= "a" | "b" | "c" | ...... | "z" | "A" | "B" | "C" | ...... | "Z" | "_"
+δ(Alp, "a", @)=(RET, @)
+δ(Alp, "b", @)=(RET, @)
+δ(Alp, "c", @)=(RET, @)
+δ(Alp, "d", @)=(RET, @)
+δ(Alp, "e", @)=(RET, @)
+δ(Alp, "f", @)=(RET, @)
+δ(Alp, "g", @)=(RET, @)
+δ(Alp, "h", @)=(RET, @)
+δ(Alp, "i", @)=(RET, @)
+δ(Alp, "j", @)=(RET, @)
+δ(Alp, "k", @)=(RET, @)
+δ(Alp, "l", @)=(RET, @)
+δ(Alp, "m", @)=(RET, @)
+δ(Alp, "n", @)=(RET, @)
+δ(Alp, "o", @)=(RET, @)
+δ(Alp, "p", @)=(RET, @)
+δ(Alp, "q", @)=(RET, @)
+δ(Alp, "r", @)=(RET, @)
+δ(Alp, "s", @)=(RET, @)
+δ(Alp, "t", @)=(RET, @)
+δ(Alp, "u", @)=(RET, @)
+δ(Alp, "v", @)=(RET, @)
+δ(Alp, "w", @)=(RET, @)
+δ(Alp, "x", @)=(RET, @)
+δ(Alp, "y", @)=(RET, @)
+δ(Alp, "z", @)=(RET, @)
+δ(Alp, "A", @)=(RET, @)
+δ(Alp, "B", @)=(RET, @)
+δ(Alp, "C", @)=(RET, @)
+δ(Alp, "D", @)=(RET, @)
+δ(Alp, "E", @)=(RET, @)
+δ(Alp, "F", @)=(RET, @)
+δ(Alp, "G", @)=(RET, @)
+δ(Alp, "H", @)=(RET, @)
+δ(Alp, "I", @)=(RET, @)
+δ(Alp, "J", @)=(RET, @)
+δ(Alp, "K", @)=(RET, @)
+δ(Alp, "L", @)=(RET, @)
+δ(Alp, "M", @)=(RET, @)
+δ(Alp, "N", @)=(RET, @)
+δ(Alp, "O", @)=(RET, @)
+δ(Alp, "P", @)=(RET, @)
+δ(Alp, "Q", @)=(RET, @)
+δ(Alp, "R", @)=(RET, @)
+δ(Alp, "S", @)=(RET, @)
+δ(Alp, "T", @)=(RET, @)
+δ(Alp, "U", @)=(RET, @)
+δ(Alp, "V", @)=(RET, @)
+δ(Alp, "W", @)=(RET, @)
+δ(Alp, "X", @)=(RET, @)
+δ(Alp, "Y", @)=(RET, @)
+δ(Alp, "Z", @)=(RET, @)
+δ(Alp, "_", @)=(RET, @)
+
+<LETTER> ::= <ALPHABET> <LETTER> | <ALPHABET> | <DIGIT> <LETTER> | <DIGIT>
+δ(Let, ε, @)=([Alp, Let1], @)
+δ(Let, ε, @)=([Dig, Let2], @)
+δ(Let1, ε, @)=([Let, RET], @)
+δ(Let1, ε, @)=(RET, @)
+δ(Let2, ε, @)=([Let, RET], @)
+δ(Let2, ε, @)=(RET, @)
+
+<DIGIT> ::= <ZDIGIT> | <NZDIGIT>
+δ(Dig, ε, @)=([Zdi, RET], @)
+δ(Dig, ε, @)=([Nzd, RET], @)
+
+<ZDIGIT> ::= "0"
+δ(Zdi, "0", @)=(RET, @)
+
+<NZDIGIT> ::= "1" | "2" | ...... | "9"
+δ(Nzd, "1", @)=(RET, @)
+δ(Nzd, "2", @)=(RET, @)
+...
+δ(Nzd, "9", @)=(RET, @)
+
+<HEX> ::= "0X"(DIGIT | "a" | "b" | "c" | "d" | "e" | "f")*
+
+

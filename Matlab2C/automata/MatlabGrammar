@@ -1,0 +1,33 @@
+<Function>::="function""["<ReturnParas>"]""="<Id>"("<ParaList>")"<Statement>("end")?
+<GlobalDefine>::=("global"<Id>";")*
+<ReturnParas>::=(<Id>(","<Id>)*)?
+<ParaList>::=(<Id>(","<Id>)*)?
+<Statement>::=";" | <GlobalS>";" | <FunctionCall> ";" | <AssignmentS> ";"| <ReturnS> ";" | <WhileS> | <IfS> | <ForS> 
+<GlobalS>::=("global"<Id>)*
+<FunctionCall>::=<Id> "(" <ParaValueList> ")"
+<AssignmentS>::=<Id> ("."<Id>)? | <SetId>("."<Id>)? "=" <Ele>
+<ReturnS>::="return" (<Ele>)?
+<WhileS>::="while" <Ele> <Statement>"end"
+<IfS>::="if" <Ele> <Statement> (("else" <Statement>)?  | ("elseif"<Statement>)*) "end"
+<ForS>::="for" <Id> "=" <Id>":" <Id> <Statement> "end"
+<ParaValueList>::=(<Ele> ("," <Ele>)*)?
+<Ele>::=<AndProE> ("||" <AndProE>)*
+<AndProE>::=<ConditionTermE> ("&&" <ConditionTermE>)*
+<ConditionTermE>::= <ElementTakeS> | <MSE> ( ( ">" <MSE> | "<=" <MSE> | "<" <MSE> 
+<MSE>::=<MSET> ("+" <MSET> | "-" <MSET> | "&" <MSET> | "|" <MSET> | ">>" <MSET> | "<<" <MSET> | "--" <MSET> )*
+<MSET>::=<UnaryE> ("*" <UnaryE> | "/" <UnaryE> | "%" <UnaryE> | "/-\\" <UnaryE> | "\\-/" <UnaryE>)*
+<UnaryE>::=(("+" | "-") <Term>) | <OneE>
+<OneE>::=("~" <OneE>) | ("*" <OneE>) | ("&" <OneE>) | <Term>
+<Term>::= ("nil" | <StringLit> | <UIntLit> | <UFloatLit> | <CharLit> | <TrueLit> | <FalseLit> 
+<UIntLit>::=(<NZDIGIT> (<DIGIT>)*) | <ZDIGIT> | <HEX>
+<UFloatLit>::=<UIntLit> "." (<DIGIT>)*
+<CharLit>::="\'" (~["\'","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""]) "\'"
+<StringLit>::="\"" (~["\"","\\","\n","\r"] | "\\" ["n","t","b","r","f","\\","\'","\""])* "\""
+
+<Id>::=<ALPHABET> <LETTER> | <ALPHABET>
+<SetId>::=(<ALPHABET> <LETTER> | <ALPHABET>)("("<Id>")"|"{"<Id>"}"|"("<Id>","<Id>")"|"{"<Id>","<Id>"}")
+<ALPHABET>::= "a" | "b" | "c" | ...... | "z" | "A" | "B" | "C" | ...... | "Z" | "_"
+<LETTER> ::= <ALPHABET> <LETTER> | <ALPHABET> | <DIGIT> <LETTER> | <DIGIT>
+<DIGIT> ::= <ZDIGIT> | <NZDIGIT>
+<ZDIGIT> ::= "0"
+<NZDIGIT> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
