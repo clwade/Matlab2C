@@ -23,8 +23,8 @@ import cn.edu.buaa.Matlab2C.exception.SemanticsException;
 
 public class Matlab2C {
 
-	public static String baseRoot = "/home/chris/Documents/Matlab2C/";
-
+	//public static String baseRoot = "/home/chris/Documents/Matlab2C/";
+	public static String baseRoot = "D:\\My Documents/GitHub/Matlab2C/Matlab2C";
 	private FileReader MatlabFile;
 	private int row = 0; // 行号
 	private int noteFlag = 0; // 是否是多段注释
